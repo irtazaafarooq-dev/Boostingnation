@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* --- PREMIUM DARK MODE PALETTE --- */
+  --color-agency-black: #1B1813;  /* The absolute background */
+  --color-agency-card: #121212;   /* Slightly lighter for floating elements */
+  --color-agency-white: #F3F4F6;  /* Crisp off-white for main text */
+  --color-gaming-accent: #FF4655; /* A sharp Valorant/CoD style red for highlights */
+
+  /* --- TYPOGRAPHY --- */
+   --font-montserrat: 'Montserrat', sans-serif; /* <-- ADDED MONTSERRAT */
+
+}
+
+body {
+  background-color: var(--color-agency-black);
+  color: var(--color-agency-white);
+  font-family: var(--font-body);
+  
+  /* The "Web Agency Club" Spotlight Effect */
+  background-image: radial-gradient(circle at 50% -20%, #1f1f1f 0%, transparent 60%);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  
+  /* Keeps the scroll buttery smooth */
+  overflow-x: hidden; 
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* --- CUSTOM SLEEK SCROLLBAR --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-agency-black);
+}
+::-webkit-scrollbar-thumb {
+  background: #333333;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gaming-accent);
+}
