@@ -2,21 +2,22 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { FiChevronRight, FiStar, FiShield, FiInfo, FiZap, FiClock, FiUser, FiCheckCircle } from "react-icons/fi"; // ✅ Added FiCheckCircle here
+import { usePathname, useRouter } from "next/navigation"; // ✅ Added useRouter here
+import { FiChevronRight, FiStar, FiShield, FiInfo, FiZap, FiClock, FiUser, FiCheckCircle } from "react-icons/fi"; 
 import { FaPlaystation, FaXbox, FaWindows } from "react-icons/fa";
-import { useAuth, useClerk, useUser } from "@clerk/nextjs"; // ✅ Added useUser for email
-import Script from "next/script"; // ✅ Added for Lemon Squeezy script
+import { useAuth, useClerk, useUser } from "@clerk/nextjs"; 
+import Script from "next/script"; 
 
 export default function ProductPage() {
   const pathname = usePathname();
+  const router = useRouter(); // ✅ Initialized router for redirecting to the chat page
   const pathParts = pathname ? pathname.split("/").filter(Boolean) : [];
   const gameSlug = pathParts[1] || "game";
   const productSlug = pathParts[2] || ""; 
   const formattedGame = gameSlug.toUpperCase();
 
   const { userId } = useAuth();
-  const { user } = useUser(); // ✅ Get user details for checkout email
+  const { user } = useUser(); 
   const { openSignIn } = useClerk();
 
   // --- DATABASE STATE ---
@@ -76,34 +77,37 @@ export default function ProductPage() {
     calculatedTotalPrice = calculatedTotalPrice + (calculatedTotalPrice * (extraPercent / 100));
   }
 
-  // --- 3. CHECKOUT HANDLER (UPDATED FOR LEMON SQUEEZY) ---
+  // --- 3. CHECKOUT HANDLER (UPDATED FOR DISCORD + CRISP REDIRECT) ---
   const handleCheckout = async (isOffer) => {
-    if (!userId) {
-      openSignIn({ forceRedirectUrl: window.location.href });
-      return;
-    }
+    // if (!userId) {
+    //   openSignIn({ forceRedirectUrl: window.location.href });
+    //   return;
+    // }
 
     setIsSubmitting(true);
 
     const requestData = {
       serviceType: productData.serviceType,
       category: productData.category,
-      productName: productData.title, // Pass name to LS
-      userEmail: user?.primaryEmailAddress?.emailAddress, // Pass email to LS
+      productName: productData.title, 
+      game: formattedGame, // ✅ Added game name for the Discord alert
+      userEmail: user?.primaryEmailAddress?.emailAddress, 
       additionalInfo, platform, isExpress, isPriority, isSelfPlay
     };
 
     if (isOffer) {
       Object.assign(requestData, {
         currentRank, desiredRank, currentSR, desiredSR,
-        currentLevel, desiredLevel, weaponType, desiredCamo
+        currentLevel, desiredLevel, weaponType, desiredCamo,
+        price: "Custom Quote Requested" // ✅ Fallback text for the Discord alert
       });
     } else {
       requestData.price = calculatedTotalPrice.toFixed(2);
     }
 
     try {
-      const res = await fetch("/api/checkout", {
+      // ✅ Changed API endpoint to our new Order Creation API
+      const res = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestData)
@@ -111,22 +115,11 @@ export default function ProductPage() {
       
       const data = await res.json();
 
-      if (res.ok) {
-        // ✅ INTEGRATED LEMON SQUEEZY OVERLAY
-        if (data.url) {
-          // @ts-ignore
-          if (window.LemonSqueezy) {
-            // @ts-ignore
-            window.LemonSqueezy.Url.Open(data.url);
-          } else {
-            window.location.href = data.url; // Fallback redirect
-          }
-        } else {
-          // If it's just a Custom Offer (boosting path)
-          alert(`Request sent! Your Order ID is ${data.orderId}. Our team will contact you shortly.`);
-        }
+      if (res.ok && data.success) {
+        // ✅ Redirect user directly to the new Crisp Live Chat order page!
+        router.push(`/order/${data.orderId}`);
       } else {
-        alert("Something went wrong. Please try again.");
+        alert("Something went wrong creating your order. Please try again.");
       }
     } catch (err) {
       console.error("Failed to process request", err);
@@ -141,7 +134,7 @@ export default function ProductPage() {
 
   return (
     <main className="min-h-screen bg-[#0b0f14] text-white pt-24 md:pt-32 pb-24">
-      {/* ✅ Added Lemon Squeezy Script globally */}
+      {/* Note: You can safely delete this Lemon Squeezy Script later, but I left it here as requested! */}
       <Script src="https://app.lemonsqueezy.com/js/lemon.js" strategy="afterInteractive" />
 
       {/* BREADCRUMBS */}

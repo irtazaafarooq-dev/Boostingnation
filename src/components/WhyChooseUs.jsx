@@ -34,7 +34,7 @@ const AnimatedWordText = ({ text, delayOffset = 0, className = "" }) => {
 };
 
 const features = [
-  { id: 1, title: "295K+ Orders", subtitle: "Successfully Completed Orders", icon: FiGlobe, imageSrc: "/features/dragon1.png", accentColor: "from-teal-500/20 to-transparent", iconColor: "text-teal-400" },
+  { id: 1, title: "100K+ Orders", subtitle: "Successfully Completed Orders", icon: FiGlobe, imageSrc: "/features/dragon1.png", accentColor: "from-teal-500/20 to-transparent", iconColor: "text-teal-400" },
   { id: 2, title: "Safe with VPN", subtitle: "All Boosters Use VPN for Extra Safety", icon: FiShield, imageSrc: "/features/vpn.png", accentColor: "from-green-500/20 to-transparent", iconColor: "text-green-400" },
   { id: 3, title: "Best Prices", subtitle: "Find a lower price? We won't just match it — we'll beat it!", icon: FiTrendingDown, imageSrc: "/features/cheap.png", accentColor: "from-emerald-500/20 to-transparent", iconColor: "text-emerald-400" },
   { id: 4, title: "Private Streams", subtitle: "You will be able to watch private stream on Twitch", icon: FiVideo, imageSrc: "/features/stream.png", accentColor: "from-purple-500/20 to-transparent", iconColor: "text-purple-400" },

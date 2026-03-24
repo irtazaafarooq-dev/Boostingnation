@@ -3,47 +3,12 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence, useScroll, useMotionValueEvent } from "framer-motion";
 import Link from "next/link";
-import Image from "next/image"; // Added for the logo
+import { usePathname, useRouter } from "next/navigation"; // ✅ Added router hooks
+import Image from "next/image"; 
 import { FiShoppingCart, FiMenu, FiX, FiUser, FiChevronRight } from "react-icons/fi";
 import { dark } from '@clerk/themes';
 
-// --- CLERK IMPORTS ---
 import { SignInButton, UserButton, useAuth } from "@clerk/nextjs";
-
-// --- CUSTOM DARK MODE CONFIG ---
-// const customDarkAppearance = {
-//   variables: {
-//     colorPrimary: '#3b82f6',
-//     colorBackground: '#121820',
-//     colorText: '#ffffff',
-//     colorTextSecondary: '#ffffff',
-//   },
-//   elements: {
-//     headerTitle: "!text-white font-heading font-bold",
-//     headerSubtitle: "!text-white/70 font-body",
-//     dividerLine: "!bg-white/20",
-//     dividerText: "!text-white/50",
-//     formFieldLabel: "!text-white/80",
-//     formFieldInput: "!bg-[#0b0f14] !border-white/20 !text-white !placeholder-white/50 focus:!border-blue-500",
-//     formFieldInputShowPasswordButton: "!text-white/50 hover:!text-white",
-//     socialButtonsBlockButton: "!bg-[#0b0f14] hover:!bg-[#1a222c] !border !border-white/20 transition-colors",
-//     socialButtonsBlockButtonText: "!text-white font-bold",
-//     badge: "!bg-blue-500 !text-white !border-none !px-2 !py-0.5 !rounded-md",
-//     socialButtonsIconButton: "!bg-[#0b0f14] hover:!bg-[#1a222c] !border !border-white/20 transition-colors [&_svg_path]:!fill-white [&_svg]:!fill-white",
-//     footerActionText: "!text-white/60",
-//     footerActionLink: "!text-blue-500 hover:!text-blue-400",
-//     modalCloseButton: "!text-white/50 hover:!text-white",
-//     watermark: "!opacity-60 invert",
-//     userButtonPopoverCard: "!bg-[#121820] !border !border-white/10",
-//     userPreviewMainIdentifier: "!text-white font-bold",
-//     userPreviewSecondaryIdentifier: "!text-white/50",
-//     userButtonPopoverActionButton: "!text-white hover:!text-white hover:!bg-white/5 transition-colors",
-//     userButtonPopoverActionButtonText: "!text-white", 
-//     userButtonPopoverActionButtonIconBox: "!text-white", 
-//     userButtonPopoverActionButtonIcon: "!text-white",
-//     userButtonPopoverFooter: "!bg-[#0b0f14]",
-//   }
-// };
 
 const AnimatedText = ({ text, delayOffset = 0.9, className = "" }) => {
   const characters = text.split("");
@@ -74,6 +39,10 @@ export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { userId } = useAuth();
   const { scrollY } = useScroll();
+  
+  // ✅ Initialize Next.js navigation hooks
+  const pathname = usePathname();
+  const router = useRouter();
 
   useMotionValueEvent(scrollY, "change", (latest) => {
     setIsScrolled(latest > 50);
@@ -88,10 +57,35 @@ export default function Navbar() {
   }, [isMobileMenuOpen]);
 
   const navLinks = [
-    { name: "Games", href: "#games-section" },
+    { name: "Games", href: "/#games-section" },
     { name: "Contact", href: "/contact" },
-    { name: "Reviews", href: "#reviews" },
+    { name: "Reviews", href: "/#reviews" },
   ];
+
+  // ✅ NEW: Custom click handler for smooth scrolling
+  const handleNavClick = (e, href, isMobile = false) => {
+    if (href.startsWith("/#")) {
+      e.preventDefault();
+      const targetId = href.replace("/#", "");
+
+      if (pathname === "/") {
+        // If on homepage, smooth scroll
+        const element = document.getElementById(targetId);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+          window.history.pushState(null, "", href);
+        }
+      } else {
+        // If on another page, route back to homepage
+        router.push(href);
+      }
+    }
+
+    // Always close mobile menu if clicked from there
+    if (isMobile) {
+      setIsMobileMenuOpen(false);
+    }
+  };
 
   return (
     <>
@@ -110,22 +104,6 @@ export default function Navbar() {
           {/* --- LEFT: LOGO --- */}
           <div className="flex-1 flex justify-start">
             <Link href="/" className="flex items-center gap-3 group">
-              {/* <motion.div 
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.9, duration: 0.5 }}
-                className="w-10 h-10 rounded-sm flex items-center justify-center group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300 flex-shrink-0 overflow-hidden"
-              >
-                {/* JPEG Logo Integration */}
-                {/* <Image 
-                  src="/logo.png" 
-                  alt="Boosting Nation Logo" 
-                  width={40} 
-                  height={40} 
-                  className="object-cover"
-                /> */}
-              {/* </motion.div> */}
-              
               <div className="block">
                 <AnimatedText 
                   text="Boosting Nation" 
@@ -138,16 +116,31 @@ export default function Navbar() {
 
           {/* --- CENTER: LINKS --- */}
           <div className="hidden md:flex flex-1 justify-center items-center gap-8">
-            {navLinks.map((link, index) => (
-              <Link 
-                key={link.name} 
-                href={link.href}
-                className="group relative text-sm font-body font-medium text-white/70 hover:text-white transition-colors uppercase tracking-widest py-2"
-              >
-                <AnimatedText text={link.name} delayOffset={1.1 + (index * 0.1)} />
-                <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full group-hover:left-0" />
-              </Link>
-            ))}
+            {navLinks.map((link, index) => {
+              // ✅ Check if it's a hash link to apply the <a> tag fix
+              const isHashLink = link.href.startsWith("/#");
+              
+              return isHashLink ? (
+                <a 
+                  key={link.name} 
+                  href={link.href}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className="group relative text-sm font-body font-medium text-white/70 hover:text-white transition-colors uppercase tracking-widest py-2 cursor-pointer"
+                >
+                  <AnimatedText text={link.name} delayOffset={1.1 + (index * 0.1)} />
+                  <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full group-hover:left-0" />
+                </a>
+              ) : (
+                <Link 
+                  key={link.name} 
+                  href={link.href}
+                  className="group relative text-sm font-body font-medium text-white/70 hover:text-white transition-colors uppercase tracking-widest py-2"
+                >
+                  <AnimatedText text={link.name} delayOffset={1.1 + (index * 0.1)} />
+                  <span className="absolute bottom-0 left-1/2 w-0 h-[2px] bg-blue-500 transition-all duration-300 group-hover:w-full group-hover:left-0" />
+                </Link>
+              );
+            })}
           </div>
 
           {/* --- RIGHT: ACTIONS --- */}
@@ -196,7 +189,7 @@ export default function Navbar() {
         </div>
       </motion.nav>
 
-      {/* --- MOBILE MENU (PREMIUM GLASSMORPHISM) --- */}
+      {/* --- MOBILE MENU --- */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
@@ -206,11 +199,9 @@ export default function Navbar() {
             transition={{ duration: 0.4, ease: "easeInOut" }}
             className="fixed inset-0 z-[70] bg-[#0b0f14]/80 flex flex-col px-6 py-8 overflow-hidden"
           >
-            {/* Ambient Background Glows */}
             <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/20 rounded-full blur-[100px] pointer-events-none" />
             <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
 
-            {/* Header */}
             <div className="flex justify-between items-center mb-16 relative z-10">
               <span className="font-heading font-bold text-sm tracking-widest uppercase text-white/50">Navigation</span>
               <button 
@@ -221,30 +212,45 @@ export default function Navbar() {
               </button>
             </div>
             
-            {/* Links */}
             <div className="flex flex-col gap-8 relative z-10 flex-1">
-              {navLinks.map((link, i) => (
-                <motion.div
-                  key={link.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 + (i * 0.1), duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  <Link 
-                    href={link.href}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="group flex items-center justify-between w-full"
+              {navLinks.map((link, i) => {
+                const isHashLink = link.href.startsWith("/#");
+
+                return (
+                  <motion.div
+                    key={link.name}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 + (i * 0.1), duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   >
-                    <span className="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tight group-hover:text-blue-500 transition-colors">
-                      {link.name}
-                    </span>
-                    <FiChevronRight className="w-8 h-8 text-white/0 group-hover:text-blue-500 transition-all -translate-x-4 group-hover:translate-x-0" />
-                  </Link>
-                </motion.div>
-              ))}
+                    {isHashLink ? (
+                      <a 
+                        href={link.href}
+                        onClick={(e) => handleNavClick(e, link.href, true)}
+                        className="group flex items-center justify-between w-full cursor-pointer"
+                      >
+                        <span className="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tight group-hover:text-blue-500 transition-colors">
+                          {link.name}
+                        </span>
+                        <FiChevronRight className="w-8 h-8 text-white/0 group-hover:text-blue-500 transition-all -translate-x-4 group-hover:translate-x-0" />
+                      </a>
+                    ) : (
+                      <Link 
+                        href={link.href}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="group flex items-center justify-between w-full"
+                      >
+                        <span className="text-4xl sm:text-5xl font-heading font-black text-white uppercase tracking-tight group-hover:text-blue-500 transition-colors">
+                          {link.name}
+                        </span>
+                        <FiChevronRight className="w-8 h-8 text-white/0 group-hover:text-blue-500 transition-all -translate-x-4 group-hover:translate-x-0" />
+                      </Link>
+                    )}
+                  </motion.div>
+                );
+              })}
             </div>
 
-            {/* Bottom Action (Auth) */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}

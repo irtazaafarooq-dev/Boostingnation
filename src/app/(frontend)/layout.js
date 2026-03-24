@@ -15,7 +15,7 @@ const montserrat = Montserrat({
 });
 
 export const metadata = {
-  title: "Elite Gaming Marketplace",
+  title: "Boosting Nation",
   description: "Premium boosting and progression services.",
 };
 

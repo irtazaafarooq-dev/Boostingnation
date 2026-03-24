@@ -9,8 +9,8 @@ import { FaDiscord, FaHandshake, FaHandsHelping } from "react-icons/fa";
 const stats = [
   { id: 1, icon: FiAward, endValue: 5, label: "Years of Success" },
   { id: 2, icon: FaHandsHelping, endValue: 135000, label: "Satisfied Gamers" },
-  { id: 3, icon: FaHandshake, endValue: 295000, label: "Completed Orders" },
-  { id: 4, icon: FiThumbsUp, endValue: 16000, label: "Vouchers Under Our Name" },
+  { id: 3, icon: FaHandshake, endValue: 100000, label: "Completed Orders" },
+  { id: 4, icon: FiThumbsUp, endValue: 10000, label: "Vouchers Under Our Name" },
   { id: 5, icon: FaDiscord, endValue: 3500, label: "Discord Members" },
 ];
 
